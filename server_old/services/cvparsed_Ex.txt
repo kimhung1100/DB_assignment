@@ -1,0 +1,33 @@
+{
+    "name": "Tristan Nguyen",
+    "email": "kivanolai@gmail.com",
+    "mobile_number": "+84 918378804",
+    "date_of_birth": "1993-01-01",
+    "skills": [
+        "NodeJS",
+        "Python",
+        "Backend: Python Flask, Django framework, NodeJS NestJS",
+        "Frontend: React, Angular, native JS",
+        "Database: MongoDB , Neo4J, Postgres",
+        "Smart Contracts: EVM, Solidity, Rust, DAML",
+        "Web3 blockchain ecosystem: Solana, Hyperledger Fabric, Near, Avax, Ethereum, Tezos",
+    ],
+    "college_name": "University of Bordeaux",
+    "degree": "Master Computer Science, Degree Information Technologies",
+    "designation": [
+        "Remote Senior/Lead Frontend Engineer",
+        "(ReactJS/VueJS)",
+        "Technical consultant / Backend Engineer",
+        "Full Stack Developer",
+        "Full Stack Software Developer",
+        "Data engineer",
+    ],
+    "company_names": [
+        "Axpara Consulting",
+        "Notico Logistics",
+        "Vertex Growth",
+        "System",
+        "Smartec IoT",
+    ],
+    "no_of_pages": 4,
+}
