@@ -8,11 +8,12 @@ flask run
 ```
 
 ## Run client
+``` bash
 cd client
 npm start
+```
 
-
-## 
+## Project process
 - [ ] Create all table and reference. (not checked contranst)
 - [x] Insert sample data. (Each table have one or two meaning record).
 - [x] Define all query, trigger, procedure, function for report.
