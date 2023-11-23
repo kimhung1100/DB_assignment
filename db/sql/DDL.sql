@@ -21,6 +21,19 @@ CREATE TABLE EMPLOYEE (
     FOREIGN KEY (manager_id) REFERENCES EMPLOYEE(account_id)
 );
 
+DELIMITER //
+CREATE TRIGGER check_age_trigger BEFORE INSERT ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+    IF NEW.birth_date > DATE_SUB(CURDATE(), INTERVAL 18 YEAR) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Employees must be at least 18 years old';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
 -- BRANCH
 CREATE TABLE BRANCH (
     branch_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -44,6 +57,20 @@ CREATE TABLE IMPORT_EXPORT_FORM (
     FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id)
 );
 
+DELIMITER //
+CREATE TRIGGER check_timestamp
+BEFORE INSERT ON IMPORT_EXPORT_FORM
+FOR EACH ROW
+BEGIN
+    IF NEW.timestamp > NOW() THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Timestamp cannot be in the future';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
 CREATE TABLE PUBLISHER (
     publisher_id INT PRIMARY KEY AUTO_INCREMENT,
     publisher_name VARCHAR(255) NOT NULL UNIQUE
@@ -63,6 +90,13 @@ CREATE TABLE BOOK (
     FOREIGN KEY (publisher) REFERENCES PUBLISHER(publisher_id)
 );
 
+ALTER TABLE BOOK
+ADD CONSTRAINT check_positive_price CHECK (price > 0);
+
+ALTER TABLE BOOK
+ADD CONSTRAINT check_positive_print_length CHECK (print_length > 0);
+
+
 CREATE TABLE AUTHOR (
     author_id INT PRIMARY KEY AUTO_INCREMENT,
     author_name VARCHAR(255) NOT NULL UNIQUE
@@ -77,6 +111,10 @@ CREATE TABLE BOOK_IN_FORM (
     FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
 );
 
+ALTER TABLE BOOK_IN_FORM
+ADD CONSTRAINT check_positive_quantity CHECK (quantity > 0);
+
+
 CREATE TABLE CUSTOMER (
     account_id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -87,6 +125,24 @@ CREATE TABLE CUSTOMER (
     phone_number VARCHAR(15) UNIQUE NOT NULL,
     password VARCHAR(40) NOT NULL
 );
+
+ALTER TABLE CUSTOMER
+ADD CONSTRAINT check_valid_gender CHECK (gender IN ('male', 'female', 'other'));
+
+DELIMITER //
+CREATE TRIGGER check_birth_date_trigger
+BEFORE INSERT ON CUSTOMER
+FOR EACH ROW
+BEGIN
+    IF NEW.birth_date > CURDATE() THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Birth date cannot be in the future';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
 # SHOW INDEX FROM CUSTOMER;
 # ALTER TABLE CUSTOMER
 # DROP INDEX phone_number;
@@ -104,6 +160,16 @@ CREATE TABLE RATING (
     FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN),
     FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id)
 );
+
+ALTER TABLE RATING
+ADD CONSTRAINT check_valid_rating_points CHECK (rating_points >= 1 AND rating_points <= 5);
+
+ALTER TABLE RATING
+ADD CONSTRAINT check_valid_status CHECK (status IN ('pending approval', 'approved', 'hidden'));
+
+ALTER TABLE RATING
+ADD CONSTRAINT check_comment_length CHECK (CHAR_LENGTH(comment) >= 2 AND CHAR_LENGTH(comment) <= 255);
+
 
 CREATE TABLE RATING_IMAGE (
     rating_id INT NOT NULL,
@@ -130,11 +196,14 @@ CREATE TABLE DELIVERY_ADDRESS (
     INDEX idx_address_id (address_id)   -- Add this line
 );
 
+ALTER TABLE DELIVERY_ADDRESS
+ADD CONSTRAINT check_phone_number_format CHECK (phone_number REGEXP '^[+]?[0-9]+$');
 
 CREATE TABLE VOUCHER (
     voucher_id INT AUTO_INCREMENT,
     start_date DATE,
     end_date DATE,
+    min_value INT,
     account_id INT,
     discount_rate_flag BOOL,
     discount_rate INT UNSIGNED,
@@ -145,12 +214,16 @@ CREATE TABLE VOUCHER (
     FOREIGN KEY (account_id) REFERENCES EMPLOYEE(account_id)
 );
 
--- Add new columns
 ALTER TABLE VOUCHER
-ADD COLUMN min_value INT after end_date;
+ADD CONSTRAINT check_valid_dates CHECK (start_date <= end_date);
 
-
-
+ALTER TABLE VOUCHER
+ADD CONSTRAINT check_exclusive_discount_flags CHECK (
+    (discount_rate_flag = 1 AND discount_amount_flag = 0) OR
+    (discount_rate_flag = 0 AND discount_amount_flag = 1)
+);
+ALTER TABLE VOUCHER
+ADD CONSTRAINT check_min_value CHECK (min_value >= 0);
 
 CREATE TABLE ORDERS (
     order_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -161,6 +234,12 @@ CREATE TABLE ORDERS (
     FOREIGN KEY (address_id) REFERENCES DELIVERY_ADDRESS(address_id)
 );
 
+ALTER TABLE ORDERS
+ADD CONSTRAINT check_valid_order_status CHECK (
+    status IN ('pending', 'processing', 'confirmed', 'delivering', 'delivered', 'canceled', 'refunding')
+);
+
+
 CREATE TABLE INVOICE (
     invoice_id INT PRIMARY KEY AUTO_INCREMENT,
     timestamp DATE,
@@ -170,6 +249,11 @@ CREATE TABLE INVOICE (
     total_cost INT UNSIGNED,
     FOREIGN KEY (order_id) REFERENCES ORDERS(order_id)
 );
+
+ALTER TABLE INVOICE
+ADD CONSTRAINT check_positive_values CHECK (delivery_fee >= 0 AND total_cost >= 0);
+
+
 
 CREATE TABLE REFUND_REQUEST (
     order_id INT,
@@ -183,6 +267,12 @@ CREATE TABLE REFUND_REQUEST (
     FOREIGN KEY (order_id) REFERENCES ORDERS(order_id),
     FOREIGN KEY (account_id) REFERENCES EMPLOYEE(account_id)
 );
+
+ALTER TABLE REFUND_REQUEST
+ADD CONSTRAINT check_valid_status_refund CHECK (
+    status IN ('pending', 'processing', 'approved', 'refuse')
+);
+
 
 CREATE TABLE USED_VOUCHER (
     order_id INT PRIMARY KEY,
@@ -200,7 +290,7 @@ CREATE TABLE USED_VOUCHER (
 
 CREATE TABLE CATEGORY (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_name VARCHAR(255)
+    category_name VARCHAR(255) UNIQUE NOT NULL
 );
 
 
@@ -227,6 +317,10 @@ CREATE TABLE BOOK_BELONG_TO_BRANCH (
     FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
 );
 
+ALTER TABLE BOOK_BELONG_TO_BRANCH
+ADD CONSTRAINT check_non_negative_quantity CHECK (quantity >= 0);
+
+
 CREATE TABLE EMPLOYEE_BELONG_TO_BRANCH (
     branch_id INT,
     employee_id INT,
@@ -245,6 +339,13 @@ CREATE TABLE BELONG_TO_ORDER (
     FOREIGN KEY (order_id) REFERENCES ORDERS(order_id),
     FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
 );
+ALTER TABLE BELONG_TO_ORDER
+ADD CONSTRAINT check_positive_quantity_order CHECK (quantity > 0);
+
+ALTER TABLE BELONG_TO_ORDER
+ADD CONSTRAINT check_positive_price_order CHECK (price >= 0);
+
+
 
 CREATE TABLE IMAGE_BOOK (
     ISBN VARCHAR(13),
