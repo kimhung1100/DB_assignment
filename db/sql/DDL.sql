@@ -1,0 +1,265 @@
+-- Create enum-like types
+# CREATE DOMAIN ISBN_TYPE AS CHAR(13);
+# CREATE DOMAIN PHONE_NUMBER_TYPE AS VARCHAR(20);
+
+-- EMPLOYEE TABLE
+CREATE TABLE EMPLOYEE (
+    account_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE,
+    fname VARCHAR(20) NOT NULL,
+    lname VARCHAR(20) NOT NULL,
+    gender ENUM('male', 'female', 'other') NOT NULL,
+    birth_date DATE NOT NULL,
+    number_address VARCHAR(20) NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    ward VARCHAR(50) NOT NULL,
+    district VARCHAR(50) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    manager_id INT,
+    phone_number VARCHAR(15) NOT NULL,
+    password VARCHAR(40) NOT NULL,
+    FOREIGN KEY (manager_id) REFERENCES EMPLOYEE(account_id)
+);
+
+-- BRANCH
+CREATE TABLE BRANCH (
+    branch_id INT PRIMARY KEY AUTO_INCREMENT,
+    branch_name VARCHAR(255) UNIQUE NOT NULL,
+    number_address VARCHAR(20) NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    ward VARCHAR(50) NOT NULL,
+    district VARCHAR(50) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    phone_number VARCHAR(15) NOT NULL
+);
+
+-- Create the table
+CREATE TABLE IMPORT_EXPORT_FORM (
+    form_id INT PRIMARY KEY AUTO_INCREMENT,
+    timestamp DATETIME,
+    type ENUM('Import', 'Export'),
+    employee_id INT,
+    branch_id INT,
+    FOREIGN KEY (employee_id) REFERENCES EMPLOYEE(account_id),
+    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id)
+);
+
+CREATE TABLE PUBLISHER (
+    publisher_id INT PRIMARY KEY AUTO_INCREMENT,
+    publisher_name VARCHAR(255) NOT NULL UNIQUE
+);
+
+
+CREATE TABLE BOOK (
+    ISBN VARCHAR(13) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    book_cover ENUM('hardcover', 'paperback') NOT NULL,
+    description LONGTEXT NOT NULL,
+    dimensions VARCHAR(20) NOT NULL,
+    print_length INT NOT NULL,
+    price INT NOT NULL,
+    publication_date DATE NOT NULL,
+    publisher INT NOT NULL,
+    FOREIGN KEY (publisher) REFERENCES PUBLISHER(publisher_id)
+);
+
+CREATE TABLE AUTHOR (
+    author_id INT PRIMARY KEY AUTO_INCREMENT,
+    author_name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE BOOK_IN_FORM (
+    form_id INT NOT NULL auto_increment,
+    ISBN VARCHAR(13) NOT NULL,
+    quantity INT NOT NULL,
+    PRIMARY KEY (form_id, ISBN),
+    FOREIGN KEY (form_id) REFERENCES IMPORT_EXPORT_FORM(form_id),
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
+);
+
+CREATE TABLE CUSTOMER (
+    account_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    fname VARCHAR(20) NOT NULL,
+    lname VARCHAR(20) NOT NULL,
+    gender ENUM('male', 'female', 'other') NOT NULL,
+    birth_date DATE NOT NULL,
+    phone_number VARCHAR(15) UNIQUE NOT NULL,
+    password VARCHAR(40) NOT NULL
+);
+# SHOW INDEX FROM CUSTOMER;
+# ALTER TABLE CUSTOMER
+# DROP INDEX phone_number;
+# ALTER TABLE CUSTOMER
+# MODIFY COLUMN phone_number VARCHAR(15) NOT NULL;
+
+CREATE TABLE RATING (
+    rating_id INT PRIMARY KEY AUTO_INCREMENT,
+    rating_points INT NOT NULL,
+    timestamp DATETIME NOT NULL,
+    status ENUM('pending approval', 'approved', 'hidden') NOT NULL,
+    comment VARCHAR(255),
+    ISBN VARCHAR(13) NOT NULL,
+    account_id INT NOT NULL,
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN),
+    FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id)
+);
+
+CREATE TABLE RATING_IMAGE (
+    rating_id INT NOT NULL,
+    img_link VARCHAR(255) NOT NULL,
+    PRIMARY KEY (rating_id, img_link),
+    FOREIGN KEY (rating_id) REFERENCES RATING(rating_id)
+);
+
+# DROP TABLE DELIVERY_ADDRESS;
+CREATE TABLE DELIVERY_ADDRESS (
+    account_id INT,
+    address_id INT,
+    house_number VARCHAR(20),
+    street VARCHAR(255),
+    ward VARCHAR(255),
+    district VARCHAR(255),
+    city VARCHAR(255),
+    phone_number VARCHAR(13),
+    Fname VARCHAR(50),
+    Lname VARCHAR(50),
+    PRIMARY KEY (account_id, address_id),
+    FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id),
+    INDEX idx_account_id (account_id), -- Add this line
+    INDEX idx_address_id (address_id)   -- Add this line
+);
+
+
+CREATE TABLE VOUCHER (
+    voucher_id INT AUTO_INCREMENT,
+    start_date DATE,
+    end_date DATE,
+    account_id INT,
+    discount_rate_flag BOOL,
+    discount_rate INT UNSIGNED,
+    discount_amount_flag BOOL,
+    discount_amount INT,
+    freeship_flag BOOL,
+    PRIMARY KEY (voucher_id),
+    FOREIGN KEY (account_id) REFERENCES EMPLOYEE(account_id)
+);
+
+-- Add new columns
+ALTER TABLE VOUCHER
+ADD COLUMN min_value INT after end_date;
+
+
+
+
+CREATE TABLE ORDERS (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    status ENUM('pending', 'processing', 'confirmed', 'delivering', 'delivered', 'canceled', 'refunding'),
+    account_id INT,
+    address_id INT,
+    FOREIGN KEY (account_id) REFERENCES DELIVERY_ADDRESS(account_id),
+    FOREIGN KEY (address_id) REFERENCES DELIVERY_ADDRESS(address_id)
+);
+
+CREATE TABLE INVOICE (
+    invoice_id INT PRIMARY KEY AUTO_INCREMENT,
+    timestamp DATE,
+    payment_method ENUM('COD', 'Bank Transfer', 'Other'),
+    delivery_fee INT UNSIGNED,
+    order_id INT,
+    total_cost INT UNSIGNED,
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id)
+);
+
+CREATE TABLE REFUND_REQUEST (
+    order_id INT,
+    request_id INT,
+    status ENUM('pending', 'processing', 'approved', 'refuse'),
+    timestamp DATE,
+    return_reason VARCHAR(255),
+    account_id INT,
+    img_link VARCHAR(255),
+    PRIMARY KEY (order_id, request_id),
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id),
+    FOREIGN KEY (account_id) REFERENCES EMPLOYEE(account_id)
+);
+
+CREATE TABLE USED_VOUCHER (
+    order_id INT PRIMARY KEY,
+    voucher_id VARCHAR(255),
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id),
+    FOREIGN KEY (voucher_id) REFERENCES VOUCHER(voucher_id)
+);
+
+# ALTER TABLE USED_VOUCHER
+# DROP FOREIGN KEY USED_VOUCHER_ibfk_2;
+#
+# ALTER TABLE USED_VOUCHER
+# ADD CONSTRAINT USED_VOUCHER_ibfk_2
+# FOREIGN KEY (voucher_id) REFERENCES VOUCHER(voucher_id);
+
+CREATE TABLE CATEGORY (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(255)
+);
+
+
+CREATE TABLE BELONG_TO_CATEGORY (
+    category_id INT,
+    ISBN VARCHAR(13),
+    PRIMARY KEY (category_id, ISBN),
+    FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id)
+);
+
+CREATE TABLE WRITE_BOOK (
+    author_id INT,
+    ISBN VARCHAR(13),
+    PRIMARY KEY (author_id, ISBN),
+    FOREIGN KEY (author_id) REFERENCES AUTHOR(author_id)
+);
+
+CREATE TABLE BOOK_BELONG_TO_BRANCH (
+    branch_id INT,
+    ISBN VARCHAR(13),
+    quantity INT,
+    PRIMARY KEY (branch_id, ISBN),
+    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id),
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
+);
+
+CREATE TABLE EMPLOYEE_BELONG_TO_BRANCH (
+    branch_id INT,
+    employee_id INT,
+    start_date DATE,
+    PRIMARY KEY (branch_id, employee_id),
+    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id),
+    FOREIGN KEY (employee_id) REFERENCES EMPLOYEE(account_id)
+);
+
+CREATE TABLE BELONG_TO_ORDER (
+    order_id INT,
+    ISBN VARCHAR(13),
+    quantity INT UNSIGNED,
+    price INT UNSIGNED,
+    PRIMARY KEY (order_id, ISBN),
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id),
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
+);
+
+CREATE TABLE IMAGE_BOOK (
+    ISBN VARCHAR(13),
+    img_link VARCHAR(255),
+    PRIMARY KEY (ISBN, img_link),
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
+);
+
+CREATE TABLE LIKE_RATING (
+    account_id INT,
+    rating_id INT,
+    PRIMARY KEY (account_id, rating_id),
+    FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id),
+    FOREIGN KEY (rating_id) REFERENCES RATING(rating_id)
+);
+
+
+

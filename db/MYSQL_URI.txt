@@ -1,0 +1,1 @@
+mysql://avnadmin:AVNS_o3IKL7RQMrejlracpZJ@online-bookstore-264928de-online-book-store-f976.a.aivencloud.com:20766/defaultdb?ssl-mode=REQUIRED
