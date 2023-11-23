@@ -11,8 +11,8 @@ npm start
 
 
 ## 
-- [x] Create all table and reference.
-- [ ] Insert sample data. (Doing)
+- [ ] Create all table and reference. (not checked contranst)
+- [x] Insert sample data. (Each table have one or two meaning record).
 - [x] Define all query, trigger, procedure, function for report.
 - [ ] Implement query, trigger, procedure, function.
 - [x] Create skeleton app.
