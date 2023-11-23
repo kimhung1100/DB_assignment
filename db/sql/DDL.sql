@@ -51,12 +51,13 @@ CREATE TABLE IMPORT_EXPORT_FORM (
     form_id INT PRIMARY KEY AUTO_INCREMENT,
     timestamp DATETIME,
     type ENUM('Import', 'Export'),
+    status status ENUM('pending', 'confirmed'),
     employee_id INT,
     branch_id INT,
     FOREIGN KEY (employee_id) REFERENCES EMPLOYEE(account_id),
     FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id)
 );
-
+# ALTER TABLE IMPORT_EXPORT_FORM ADD Column status ENUM('pending', 'confirmed') after type;
 DELIMITER //
 CREATE TRIGGER check_timestamp
 BEFORE INSERT ON IMPORT_EXPORT_FORM
