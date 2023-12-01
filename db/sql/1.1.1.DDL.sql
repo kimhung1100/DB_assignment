@@ -2,6 +2,11 @@
 # CREATE DOMAIN ISBN_TYPE AS CHAR(13);
 # CREATE DOMAIN PHONE_NUMBER_TYPE AS VARCHAR(20);
 
+
+-- ---------------------------------------------------------------------
+-- EMPLOYEE, BRANCH GROUP
+--
+-- ---------------------------------------------------------------------
 -- EMPLOYEE TABLE
 CREATE TABLE EMPLOYEE (
     account_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -46,6 +51,15 @@ CREATE TABLE BRANCH (
     phone_number VARCHAR(15) NOT NULL
 );
 
+CREATE TABLE EMPLOYEE_BELONG_TO_BRANCH (
+    branch_id INT,
+    employee_id INT,
+    start_date DATE,
+    PRIMARY KEY (branch_id, employee_id),
+    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id),
+    FOREIGN KEY (employee_id) REFERENCES EMPLOYEE(account_id)
+);
+
 -- Create the table
 CREATE TABLE IMPORT_EXPORT_FORM (
     form_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -71,12 +85,25 @@ END;
 //
 DELIMITER ;
 
+-- ---------------------------------------------------------------------
+-- BOOK GROUP
+--
+-- ---------------------------------------------------------------------
 
 CREATE TABLE PUBLISHER (
     publisher_id INT PRIMARY KEY AUTO_INCREMENT,
     publisher_name VARCHAR(255) NOT NULL UNIQUE
 );
 
+CREATE TABLE AUTHOR (
+    author_id INT PRIMARY KEY AUTO_INCREMENT,
+    author_name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE CATEGORY (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(255) UNIQUE NOT NULL
+);
 
 CREATE TABLE BOOK (
     ISBN VARCHAR(13) PRIMARY KEY,
@@ -97,11 +124,13 @@ ADD CONSTRAINT check_positive_price CHECK (price > 0);
 ALTER TABLE BOOK
 ADD CONSTRAINT check_positive_print_length CHECK (print_length > 0);
 
-
-CREATE TABLE AUTHOR (
-    author_id INT PRIMARY KEY AUTO_INCREMENT,
-    author_name VARCHAR(255) NOT NULL UNIQUE
+CREATE TABLE IMAGE_BOOK (
+    ISBN VARCHAR(13),
+    img_link VARCHAR(255),
+    PRIMARY KEY (ISBN, img_link),
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
 );
+
 
 CREATE TABLE BOOK_IN_FORM (
     form_id INT NOT NULL auto_increment,
@@ -115,6 +144,36 @@ CREATE TABLE BOOK_IN_FORM (
 ALTER TABLE BOOK_IN_FORM
 ADD CONSTRAINT check_positive_quantity CHECK (quantity > 0);
 
+CREATE TABLE BELONG_TO_CATEGORY (
+    category_id INT,
+    ISBN VARCHAR(13),
+    PRIMARY KEY (category_id, ISBN),
+    FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id)
+);
+
+CREATE TABLE WRITE_BOOK (
+    author_id INT,
+    ISBN VARCHAR(13),
+    PRIMARY KEY (author_id, ISBN),
+    FOREIGN KEY (author_id) REFERENCES AUTHOR(author_id)
+);
+
+CREATE TABLE BOOK_BELONG_TO_BRANCH (
+    branch_id INT,
+    ISBN VARCHAR(13),
+    quantity INT,
+    PRIMARY KEY (branch_id, ISBN),
+    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id),
+    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
+);
+
+ALTER TABLE BOOK_BELONG_TO_BRANCH
+ADD CONSTRAINT check_non_negative_quantity CHECK (quantity >= 0);
+
+-- ---------------------------------------------------------------------
+-- CUSTOMER GROUP
+--
+-- ---------------------------------------------------------------------
 
 CREATE TABLE CUSTOMER (
     account_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -127,8 +186,8 @@ CREATE TABLE CUSTOMER (
     password VARCHAR(40) NOT NULL
 );
 
-ALTER TABLE CUSTOMER
-ADD CONSTRAINT check_valid_gender CHECK (gender IN ('male', 'female', 'other'));
+# ALTER TABLE CUSTOMER
+# ADD CONSTRAINT check_valid_gender CHECK (gender IN ('male', 'female', 'other'));
 
 DELIMITER //
 CREATE TRIGGER check_birth_date_trigger
@@ -143,6 +202,26 @@ END;
 //
 DELIMITER ;
 
+# DROP TABLE DELIVERY_ADDRESS;
+CREATE TABLE DELIVERY_ADDRESS (
+    account_id INT,
+    address_id INT,
+    house_number VARCHAR(20),
+    street VARCHAR(255),
+    ward VARCHAR(255),
+    district VARCHAR(255),
+    city VARCHAR(255),
+    phone_number VARCHAR(13),
+    Fname VARCHAR(50),
+    Lname VARCHAR(50),
+    PRIMARY KEY (account_id, address_id),
+    FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id),
+    INDEX idx_account_id (account_id),
+    INDEX idx_address_id (address_id)
+);
+
+ALTER TABLE DELIVERY_ADDRESS
+ADD CONSTRAINT check_phone_number_format CHECK (phone_number REGEXP '^[+]?[0-9]+$');
 
 # SHOW INDEX FROM CUSTOMER;
 # ALTER TABLE CUSTOMER
@@ -179,26 +258,7 @@ CREATE TABLE RATING_IMAGE (
     FOREIGN KEY (rating_id) REFERENCES RATING(rating_id)
 );
 
-# DROP TABLE DELIVERY_ADDRESS;
-CREATE TABLE DELIVERY_ADDRESS (
-    account_id INT,
-    address_id INT,
-    house_number VARCHAR(20),
-    street VARCHAR(255),
-    ward VARCHAR(255),
-    district VARCHAR(255),
-    city VARCHAR(255),
-    phone_number VARCHAR(13),
-    Fname VARCHAR(50),
-    Lname VARCHAR(50),
-    PRIMARY KEY (account_id, address_id),
-    FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id),
-    INDEX idx_account_id (account_id), -- Add this line
-    INDEX idx_address_id (address_id)   -- Add this line
-);
 
-ALTER TABLE DELIVERY_ADDRESS
-ADD CONSTRAINT check_phone_number_format CHECK (phone_number REGEXP '^[+]?[0-9]+$');
 
 CREATE TABLE VOUCHER (
     voucher_id INT AUTO_INCREMENT,
@@ -274,6 +334,21 @@ ADD CONSTRAINT check_valid_status_refund CHECK (
     status IN ('pending', 'processing', 'approved', 'refuse')
 );
 
+DELIMITER //
+CREATE TRIGGER before_insert_refund_request
+BEFORE INSERT ON REFUND_REQUEST
+FOR EACH ROW
+BEGIN
+    IF NEW.timestamp > CURRENT_TIMESTAMP THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Cannot insert future timestamp';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
+
 
 CREATE TABLE USED_VOUCHER (
     order_id INT PRIMARY KEY,
@@ -289,47 +364,6 @@ CREATE TABLE USED_VOUCHER (
 # ADD CONSTRAINT USED_VOUCHER_ibfk_2
 # FOREIGN KEY (voucher_id) REFERENCES VOUCHER(voucher_id);
 
-CREATE TABLE CATEGORY (
-    category_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_name VARCHAR(255) UNIQUE NOT NULL
-);
-
-
-CREATE TABLE BELONG_TO_CATEGORY (
-    category_id INT,
-    ISBN VARCHAR(13),
-    PRIMARY KEY (category_id, ISBN),
-    FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id)
-);
-
-CREATE TABLE WRITE_BOOK (
-    author_id INT,
-    ISBN VARCHAR(13),
-    PRIMARY KEY (author_id, ISBN),
-    FOREIGN KEY (author_id) REFERENCES AUTHOR(author_id)
-);
-
-CREATE TABLE BOOK_BELONG_TO_BRANCH (
-    branch_id INT,
-    ISBN VARCHAR(13),
-    quantity INT,
-    PRIMARY KEY (branch_id, ISBN),
-    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id),
-    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
-);
-
-ALTER TABLE BOOK_BELONG_TO_BRANCH
-ADD CONSTRAINT check_non_negative_quantity CHECK (quantity >= 0);
-
-
-CREATE TABLE EMPLOYEE_BELONG_TO_BRANCH (
-    branch_id INT,
-    employee_id INT,
-    start_date DATE,
-    PRIMARY KEY (branch_id, employee_id),
-    FOREIGN KEY (branch_id) REFERENCES BRANCH(branch_id),
-    FOREIGN KEY (employee_id) REFERENCES EMPLOYEE(account_id)
-);
 
 CREATE TABLE BELONG_TO_ORDER (
     order_id INT,
@@ -347,14 +381,6 @@ ALTER TABLE BELONG_TO_ORDER
 ADD CONSTRAINT check_positive_price_order CHECK (price >= 0);
 
 
-
-CREATE TABLE IMAGE_BOOK (
-    ISBN VARCHAR(13),
-    img_link VARCHAR(255),
-    PRIMARY KEY (ISBN, img_link),
-    FOREIGN KEY (ISBN) REFERENCES BOOK(ISBN)
-);
-
 CREATE TABLE LIKE_RATING (
     account_id INT,
     rating_id INT,
@@ -363,5 +389,12 @@ CREATE TABLE LIKE_RATING (
     FOREIGN KEY (rating_id) REFERENCES RATING(rating_id)
 );
 
+CREATE TABLE FORM_OF_ORDER (
+    form_id INT,
+    order_id INT,
+    PRIMARY KEY (form_id, order_id),
+    FOREIGN KEY (form_id) REFERENCES IMPORT_EXPORT_FORM(form_id),
+    FOREIGN KEY (order_id) REFERENCES ORDERS(order_id)
+);
 
-
+SHOW TABLES;
