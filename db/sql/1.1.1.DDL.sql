@@ -151,12 +151,18 @@ CREATE TABLE BELONG_TO_CATEGORY (
     FOREIGN KEY (category_id) REFERENCES CATEGORY(category_id)
 );
 
+
+-- Drop the existing WRITE_BOOK table
+DROP TABLE IF EXISTS WRITE_BOOK;
+
+-- Create the new WRITE_BOOK table
 CREATE TABLE WRITE_BOOK (
     author_id INT,
     ISBN VARCHAR(13),
-    PRIMARY KEY (author_id, ISBN),
+    PRIMARY KEY (author_id, ISBN), -- Unique constraint for author and book
     FOREIGN KEY (author_id) REFERENCES AUTHOR(author_id)
 );
+
 
 CREATE TABLE BOOK_BELONG_TO_BRANCH (
     branch_id INT,
@@ -398,3 +404,4 @@ CREATE TABLE FORM_OF_ORDER (
 );
 
 SHOW TABLES;
+

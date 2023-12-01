@@ -1,10 +1,5 @@
 
-get
-
-
-
-
-tDELIMITER //
+DELIMITER //
 
 CREATE PROCEDURE GetBooksByPublisher(
     IN p_publisher_id INT
