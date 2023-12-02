@@ -24,6 +24,6 @@ npm start
     - [x] 2 Function
 - [x] Create skeleton app.
 - [ ] Implement app.
-    - [ ] 1 Screen insert/update/delete in 1.2.1
-    - [ ] 1 screen for list of book, 1.2.3. Allow search, sort, validate, logic in update ,and delete.
+    - [ ] 1 Screen insert/update/delete Book
+    - [ ] 1 screen for list of book,(search by category and price) 1.2.3. Allow search, sort, validate, logic in update ,and delete.
     - [ ] 1 screen for another 1.2.3, 1.2.4. 
