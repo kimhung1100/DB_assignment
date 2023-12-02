@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/1.1.1.DDL.sql" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/1.2.1.insert_update_delete_book.sql" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/1.2.2.trigger.sql" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/1.2.3.procedure.sql" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/1.2.4.Functions.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/111_DDL.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/121_2_Update_Book.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/121_3_Delete_Book.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/122_Trigger1.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/122_Trigger2.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/123_1_procedure.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/123_2_procedure.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/124_1_Functions.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/124_2_Functions.sql" dialect="MySQL" />
   </component>
 </project>

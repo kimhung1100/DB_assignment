@@ -15,7 +15,7 @@ npm start
 
 ## Project process
 - [x] Create all table and reference, and constraints of each table.
-- [x] Insert sample data. (Each table have one or two meaning record).
+- [ ] Insert sample data. (Each table have one or two meaning record).
 - [x] Define all query, trigger, procedure, function for report.
 - [x] Implement query, trigger, procedure, function.
     - [x] Insert, update, delete records to 1 table.

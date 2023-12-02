@@ -194,9 +194,6 @@ BEGIN
 
     -- Start transaction
     START TRANSACTION;
-
-
-
     -- If all checks pass, insert the book
     INSERT INTO BOOK (
         ISBN, title, book_cover, description, dimensions,
@@ -220,17 +217,58 @@ DELIMITER ;
 
 -- Test the INSERT_BOOK procedure
 
+-- CASE 1: ISBN already exists
+
+CALL insertBook(
+        '8935092820392', -- Existing ISBN
+        'Book Title',
+        'hardcover',
+        'Description of the book',
+        '27 x 19 x 1.8 cm',
+        300, -- Print length
+        20, -- Price
+        '2023-01-01', -- Publication date
+        1, -- Existing publisher ID
+        1,
+    1
+    );
 
 
+-- CASE 2: Invalid dimensions format.
 
-DELETE FROM BELONG_TO_CATEGORY WHERE ISBN = '0000000000000';
-DELETE FROM IMAGE_BOOK WHERE ISBN = '0000000000000';
-DELETE FROM WRITE_BOOK WHERE ISBN = '0000000000000';
-DELETE FROM BOOK WHERE ISBN = '0000000000000';
+CALL insertBook(
+    '9876543210987',      -- New ISBN
+    'Another Book Title',
+    'paperback',
+    'Another description',
+    '27 x 19 x 1.8x cm',   -- Invalid dimensions format
+    250,                   -- Print length
+    15,                    -- Price
+    '2023-01-10',          -- Publication date
+    2,                      -- Existing publisher ID
+    1,
+    1
+);
 
-SELECT * FROM BOOK;
-SELECT * FROM WRITE_BOOK;
+CALL INSERT_BOOK(
+ '0000000000000', -- Replace with a valid and unique ISBN
+ 'Sample Book',
+ 'hardcover',
+ 'A sample book description.',
+ '15 x 23 x 3 cm',
+ 150,
+ 150000,
+ '2023-01-01',
+ 1,
+ '[1, 2, 3]',
+ '[4, 5]',
+ '["link1.jpg", "link2.jpg"]'
+ );
 
-SELECT * FROM BELONG_TO_CATEGORY;
 
-SELECT * FROM IMAGE_BOOK;
+# DELETE FROM BELONG_TO_CATEGORY WHERE ISBN = '0000000000000';
+# DELETE FROM IMAGE_BOOK WHERE ISBN = '0000000000000';
+# DELETE FROM WRITE_BOOK WHERE ISBN = '0000000000000';
+# DELETE FROM BOOK WHERE ISBN = '0000000000000';
+
+

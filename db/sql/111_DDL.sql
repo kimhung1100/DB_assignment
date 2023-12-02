@@ -262,6 +262,7 @@ CREATE TABLE RATING_IMAGE (
     img_link VARCHAR(255) NOT NULL,
     PRIMARY KEY (rating_id, img_link),
     FOREIGN KEY (rating_id) REFERENCES RATING(rating_id)
+        ON DELETE CASCADE
 );
 
 
@@ -393,7 +394,9 @@ CREATE TABLE LIKE_RATING (
     PRIMARY KEY (account_id, rating_id),
     FOREIGN KEY (account_id) REFERENCES CUSTOMER(account_id),
     FOREIGN KEY (rating_id) REFERENCES RATING(rating_id)
+        ON DELETE CASCADE
 );
+
 
 CREATE TABLE FORM_OF_ORDER (
     form_id INT,
