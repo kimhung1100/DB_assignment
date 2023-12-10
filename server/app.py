@@ -127,3 +127,37 @@ def insert_books():
 
         # Respond with an error message
         return jsonify({"error": str(e)}), 500
+    
+    
+@app.route("/revenue/", methods=["POST"])
+def get_sales_in_month():
+    try:
+        # Get data from the request
+        data = request.get_json()
+        print("Received data:", data)
+
+        # Extracting data for the function
+        year = data.get('year')
+        month = data.get('month')
+
+        # Execute the function
+        with create_connection() as connection, connection.cursor() as cursor:
+            query = f"SELECT GetMonthlyRevenue({year}, {month})"
+            cursor.execute(query)
+
+            # Fetch the result
+            result = cursor.fetchone()
+
+            # You may need to adjust this based on the structure of your result
+            if result:
+                month_revenue = result
+                return jsonify({"month_revenue": month_revenue}), 200
+            else:
+                return jsonify({"message": "No data found for the specified month"}), 404
+
+    except Exception as e:
+        # Print detailed error information
+        traceback.print_exc()
+
+        # Respond with an error message
+        return jsonify({"error": str(e)}), 500
